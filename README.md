@@ -47,4 +47,20 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 ## Model Build
 
 ## Results
+#### Is an *automatic* or *manual* transmission better for mpg?
 
+* If your vehicle weighs below 2,500lb (2.5 * 1000). I would say go for the manual transmission because it has a better mpg.
+
+* If the weight of a vehicle is above 2.500lbs there not much of a difference between manual and automatic
+
+
+#### Quantify the **mpg** difference between automatic and manual transmissions.
+
+Intercept | am (Manual) | am (Automatic) | am:wt | Rsquared | RMSE
+--- | --- |--- | --- | --- | ---
+29.314 | 13.352 | -3.282 | -8.051 | 83% | 3.45
+
+
+ * According to the model Automatic Transmission vehicles have an avg mpg of 29.31. As weight increases by 1 unit (1000/lbs), for an Automatic vehicle the mpg will drop by -3.28
+
+ * If the vehicle has a Manual Transmission the mpg increases by 13.35. As weight increases by 1 unit (1000/lbs), for a Manual vehicle the mpg will drop by -8.05
