@@ -13,6 +13,7 @@ Packages
 
 ## EDA
 <img src="Pictures/pca_mpg.PNG" width="500">
+
 ## Model Build
 
 ## Results
