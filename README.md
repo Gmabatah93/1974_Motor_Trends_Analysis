@@ -22,9 +22,9 @@ hp      |	Horsepower
 drat    | Rear Axle Ratio - The number of turns of the drive shaft for every one rotation of the wheel axle
 wt      |	Weight (lb/1000)
 qsec    |	1/4 time - A performance measure, primarily of acceleration
-vs      | Engine Cylinder Configuration - (VShape = 0 | StraightLine = 1)
-am      | Transmission Type - (Auto = 0 | Manual = 1)
-gear    | Number of Forward Gears - Auto = (3 | 4), Manual = (4 | 5)
+vs      | Engine Cylinder Configuration - (VShape = 0 : StraightLine = 1)
+am      | Transmission Type - (Auto = 0 : Manual = 1)
+gear    | Number of Forward Gears - Auto = (3 : 4), Manual = (4 : 5)
 carb    | Number of Carburetors - Engines with higher displacement typically have higher barrel configuration
 
 ## Data Cleaning
