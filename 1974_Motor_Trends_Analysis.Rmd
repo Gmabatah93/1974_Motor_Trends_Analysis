@@ -1,0 +1,563 @@
+---
+title: "1974 Motor Trends Analysis"
+author: "Isioma Mabatah"
+date: "9/2/2020"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+# Overview
+
+This report will be describing vehicles listed in the **1974 Motor Trends US Magazine**. The assignment of interest comes from [RPubs.com](https://rpubs.com/neros/61800). The objective is to explore the relationship between **mpg** and the other features listed in the dataset.
+
+Particular Questions of Interest
+
+1. Is an automatic or manual transmission better for **mpg**.
+2. Quantify the **mpg** difference between automatic and manual transmissions.
+
+## Libraries
+
+```{r loading packages, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(factoextra)
+library(FactoMineR)
+library(plotly)
+library(broom)
+```
+
+
+# Analysis
+
+## Data
+
+The `mtcars` dataset is already provided in R. The Documentation can be found [here](https://www.rdocumentation.org/packages/datasets/versions/3.6.2/topics/mtcars)
+
+```{r loading_data}
+set.seed(1993)
+df <- mtcars
+df %>% glimpse()
+```
+
+
+### Description of Features
+
+```{r description}
+df_description <- tibble(
+  Feature = c("mpg","cyl","disp","hp","drat","wt","qsec","vs","am","gear","carb"),
+  Description = c("Miles / US Gallon",
+                  "Number of Cylinders (4,6,8)",
+                  "Displacement - Measures the overall volume in the engine as a factor of cylinder circumfrance, depth and total number of cylinders. 'Proxy for the total amount of power the engine can generate.'",
+                  "Horsepower",
+                  "Rear Axle Ratio - The number of turns of the drive shaft for every one rotation of the wheel axle",
+                  "Weight (lb/1000)",
+                  "1/4 time - A performance measure, primarily of acceleration",
+                  "Engine Cylinder Configuration - (VShape = 0 | StraightLine = 1)",
+                  "Transmission Type - (Auto = 0 | Manual = 1)",
+                  "Number of Forward Gears - Auto = (3 | 4), Manual = (4 | 5)",
+                  "Number of Carburetors - Engines with higher displacement typically have higher barrel configuration")
+) %>% knitr::kable()
+
+df_description
+```
+
+
+Refer to [RPubs](https://rpubs.com/neros/61800) for a more in depth description
+
+### Preprocessing
+
+
+```{r glimpse}
+df <- df %>% mutate(
+  cyl = as.factor(cyl),
+  vs = as.factor(ifelse(vs == 1, "S","V")),
+  am = as.factor(ifelse(am == 1, "M","A")),
+  gear = as.factor(gear),
+  name = rownames(df)
+)
+# Split to Train and Testset 
+set <- sample(1:2, replace = TRUE,
+              size = nrow(df),
+              prob = c(0.6,0.4))
+df_train <- df[set == 1,]
+df_test <- df[set == 2,]
+df_train %>% skimr::skim()
+```
+
+Note: 
+
+  - Data split (60/40)
+  
+  - cyl, vs, am, and gear were changed to factors
+
+
+## Exploratory Data Analysis
+
+### PCA
+
+```{r pca_object, fig.align='center'}
+# Construct PCA Object: 
+df_train_PCA <- 
+  df_train %>% select(-cyl,-vs,-am,-gear) %>% 
+  PCA(graph = FALSE,
+      # Target (MPG)
+      quanti.sup = 1,
+      # Vehicle Names
+      quali.sup = 8)
+```
+
+
+```{r Mpg_Variables, fig.align='center', fig.cap="Figure 1"}
+df_train_PCA$quanti.sup$cor[,1:2] %>% round(2); df_train_PCA$quanti.sup$cos2[,1:2] %>% round(2)
+
+df_train_PCA %>% 
+  fviz_pca_var(col.quanti.sup = "navyblue", invisible = "var") + 
+  theme_minimal() +
+  labs(
+    title = "MPG Summary",
+    x = "MPG Cor: -0.877 | Quality of Representaion: 76%",
+    y = "MPG Cor:  0.254 | Quality of Representaion: 6%"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank()
+  )
+```
+
+
+```{r Eigenvalues, fig.align='center',fig.cap="Figure 2"}
+round(df_train_PCA$eig,2)
+df_train_PCA %>% 
+  fviz_eig(addlabels = TRUE, ylim = c(0,70)) +
+  labs(
+    title = "Principal Components 1 and 2 explains about 86% of the variance in the data",
+    x = "Principal Components",
+    y = element_blank()
+  ) +
+  theme_minimal() +
+  theme(
+    plot.background = element_blank(),
+    axis.text.y = element_blank()
+  )
+```
+
+#### Principal Components: Total Contribution
+
+```{r PC1, fig.align='center', fig.cap="Figure 3.1"}
+df_train_PCA$var$contrib[,1] %>% sort(decreasing = TRUE) %>% round(2)
+df_train_PCA %>% 
+  fviz_contrib(choice = "var", axes = 1) + 
+  labs(
+    title = "",
+    x = element_blank(),
+    y = element_blank()
+  ) +
+  theme_minimal() +
+  theme(
+    plot.background = element_blank(),
+    axis.text.y = element_blank()
+  )
+```
+
+**Principal Component 1:**
+
+ - These variables seems to correlate with the overall power of a vehicle. I would assume a vehicle with high horsepower has a high displacement. Weight would increase as well.
+  
+
+```{r PC2, fig.align='center', fig.cap="Figure 3.2"}
+df_train_PCA$var$contrib[,2] %>% sort(decreasing = TRUE) %>% round(2)
+df_train_PCA %>% 
+  fviz_contrib(choice = "var", axes = 2) +
+  labs(
+    title = "",
+    x = element_blank(),
+    y = element_blank()
+  ) +
+  theme_minimal() +
+  theme(
+    plot.background = element_blank(),
+    axis.text.y = element_blank()
+  )
+```
+
+
+**Principal Component 2:**
+
+  - drat "Rear axle ratio":  as this ratio goes up, towing capacity increases which in turn reduces the fuel economy of the vehicle
+  
+  - qsec "Measure of Acceleration": [edmunds.com](https://www.edmunds.com/car-buying/how-to-choose-the-right-axle-ratio-for-your-pickup-truck.html#:~:text=The%20term%20refers%20to%20the,each%20turn%20of%20a%20wheel.). 
+  
+  - carb "Carburetor": used to mix air with gasoline by using an optimal amount of fire to burn the gas. A good Carburator will be able to move fuel thoughout the vehicle efficiently thus increasing power to improve speed [CARBURETORS | How They Work](https://www.youtube.com/watch?v=1ohL6KgasjA)
+  
+  _All in all based on these variable descriptions I would say that this PC is more associated with how a efficient a vehicle uses its fuel in terms of performance_ 
+
+
+#### PCA-Categories
+
+```{r PCA_Cylinder, fig.align='center', fig.cap="Figure 4.1"}
+df_train_PCA %>% fviz_pca_biplot(
+  geom = "point", pointshape = 21, fill.ind = "gray", col.ind = df_train$cyl,
+  col.var = "black", alpha.var = "cos2", col.quanti.sup = "navyblue",
+  addEllipses = TRUE, ellipse.type = "confidence",
+  palette = c("lightsteelblue4","lightskyblue","lightseagreen"),
+  legend.title = "", mean.point = FALSE
+) +
+  labs(
+    title = "Cylinder",
+    x = element_blank(),
+    y = element_blank(),
+    alpha = "Quality of Representation"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    legend.position = "top"
+  )
+```
+
+_Note:_
+
+ _- While the cylinder of a vehicle increases so does the Horsepower, Displacement and Weight, which in turn leads to a lower mpg_
+
+
+```{r PCA_VS, fig.align='center', fig.cap="Figure 4.2"}
+df_train_PCA %>% fviz_pca_biplot(
+  geom = "point", pointshape = 21, fill.ind = "gray", col.ind = df_train$vs,
+  col.var = "black", alpha.var = "cos2", col.quanti.sup = "navyblue",
+  addEllipses = TRUE, ellipse.type = "confidence",
+  palette = c("lightsteelblue4", "lightseagreen"),
+  legend.title = "", mean.point = FALSE
+) +
+  labs(
+    title = "Engine Configuration",
+    x = element_blank(),
+    y = element_blank(),
+    alpha = "Quality of Representation"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    legend.position = "top"
+  )
+```
+
+_Note:_
+
+ _- Straightline engines seem to have a lower Horsepower, Displacement, and Weight compared to V-Shaped engines, which leads to a higher mpg_
+
+
+```{r PCA_Gear, fig.align='center', fig.cap="Figure 4.3"}
+df_train_PCA %>% fviz_pca_biplot(
+  geom = "point", pointshape = 21, fill.ind = "gray", col.ind = df_train$gear,
+  col.var = "black", alpha.var = "cos2", col.quanti.sup = "navyblue",
+  addEllipses = TRUE, ellipse.type = "confidence",
+  palette = c("lightsteelblue4","lightskyblue","lightseagreen"),
+  legend.title = "", mean.point = FALSE
+) +
+  labs(
+    title = "Gear",
+    x = element_blank(),
+    y = element_blank(),
+    alpha = "Quality of Representation"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    legend.position = "top"
+  )
+```
+
+_Note:_
+
+ _- A gear 4 vehicle is associated with a better mpg on avg than a gear 3 and 5 vehicles_
+ 
+ _- A gear 5 vehicles with higher drat "Rear Axle Ratio" leads to a higher mpg._
+
+
+```{r PCA_AM, fig.align='center', fig.cap="Figure: 4.4"}
+df_train_PCA %>% fviz_pca_biplot(
+  geom = "point", pointshape = 21, fill.ind = "gray", col.ind = df_train$am,
+  col.var = "black", alpha.var = "cos2", col.quanti.sup = "navyblue",
+  addEllipses = TRUE, ellipse.type = "confidence",
+  palette = c("tomato", "seagreen"),
+  legend.title = "", mean.point = FALSE
+) +
+  labs(
+    title = "Transmission",
+    subtitle = "I used a different color scheme to highlight that this is the particular catergory of interest",
+    x = element_blank(),
+    y = element_blank(),
+    alpha = "Quality of Representation"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    legend.position = "top"
+  )
+```
+
+
+_Note:_
+
+ _- Manual Transmission is a associated with a better mpg than Automatic._
+
+
+#### PCA - Biplot
+
+```{r Biplot, fig.align='center', fig.cap="Figure: 5"}
+df_train_PCA %>% 
+  fviz_pca_biplot(invisible = "ind", col.var = "black", alpha.var = "cos2",
+                  col.quanti.sup = "navyblue") %>% 
+  fviz_add(df_train_PCA$quali.sup$coord, repel = TRUE,
+           geom = "text", color = "lightsteelblue4") +
+  labs(
+    title = "Vehicle Names",
+    x = element_blank(),
+    y = element_blank(),
+    alpha = "Quality of Represention"
+  ) +
+  theme(
+    plot.background = element_blank(),
+    legend.position = "top"
+  )
+```
+
+_Note:_
+
+ _- Honda Civic "what I drive currently :)" is a lower weighted vehicle with good mpg compared to the others in the dataset_
+ 
+ _- Cadillac Fleetwood is a higher weighted vehicle which is associated with a lower mpg compared to the others in the data_
+ 
+ _- Maserati Bora is a high carb vehicle associated with a worse mpg compared to the others in the data_
+ 
+ _- Merc 230 has a good "Measure of Acceleration" compared to the other vehicles in the data_
+ 
+
+### Plots
+
+```{r plot_cor, fig.align='center', warning=FALSE, fig.cap="Figure: 6.1"}
+df_train %>% select(mpg,disp,hp,wt,qsec,drat,carb) %>% 
+  cor() %>% round(2)
+df_train %>% 
+  plot_ly(color = ~am, 
+          hoverinfo = "text",
+          text = ~paste("Name:", name, "<br>", am),
+          colors = c("tomato", "seagreen")) %>% 
+  add_trace(
+    type = "splom",
+    dimensions = list(
+      list(label = "mpg", values = ~mpg),
+      list(label = "wt", values = ~wt),
+      list(label = "drat", values = ~drat)
+    )
+  ) %>%
+  style(showlowerhalf = FALSE, showlegend = FALSE) %>% 
+  layout(title = "Correlation Plot")
+```
+
+Findings: mpg by am (transmission)
+
+ - controlling for wt, it seems as though the mpg of a vehicle varies evenly no matter the type of transmission. However their seem to be a few outliers for Automatic vehicles at the high end of wt.
+ 
+ - controlling for drat the data also varies. It looks like their might be one potential outlier at the high end of drat.
+ 
+ - _using the lasso select tool_ if you highlight the potential outliers at wt(5,5), you can see that those vehicles is associated with a low drat "Rear Axle Ratio" and mpg
+
+
+_Note:_
+
+ _- If you look at Figure 3.1: PC1 was best represented by disp, hp, and wt. I choose **wt** because it is, even though not by very much, the most correlated with mpg_
+ 
+ _- If you look at Figure 3.2: PC2 was best represented by qsec, drat, and carb. I choose **drat** for similar reasons_
+
+
+```{r plot, fig.align='center', warning=FALSE, fig.cap = "Figure: 6.2"}
+df_train %>% 
+  plot_ly(x = ~wt, y = ~drat, z = ~mpg,
+          hoverinfo = "text",
+          text = ~paste("Mpg:", mpg, "<br>",
+                        "Weight:", wt, "<br>",
+                        "Drat:", drat, "<br>",
+                        "Transmission:", am, "<br>",
+                        "Name:", name),
+          colors = c("tomato", "seagreen")
+          ) %>% 
+  add_markers(color = ~am, showlegend = FALSE) %>% 
+  layout(xaxis = list(title = "Weight (lb/1000)"),
+         yaxis = list(title = "Miles per US Gallon"),
+         title = "Automatic vs Manual",
+         plot_bgcolor = toRGB("gray90"))
+```
+
+
+Findings: mpg ~ am + drat + wt (transmission)
+
+ - controling for drat and wt, you can see more of a relationship between Transmission Types.
+ 
+ - Manual: tend to have lower weight but high drat which lends to a better mpg compared to auto
+ 
+ - Automatic: tend to have high wt and lower drat which lead to a worse mpg compared to manual
+ 
+ _This graph is also interactive to feel free to play around with it_
+ 
+
+# Modeling 
+
+To Quantify the difference I will be using a regression model
+
+### Model Fit
+
+```{r assessment}
+mod <- lm(mpg ~ am + drat + wt, data = df_train)
+mod %>% tidy()
+```
+
+_Note:_
+
+ _- The intercept represents Automatic_
+
+ _- Controlling for other the variables in the model, only wt seems to be significant_
+
+```{r interaction}
+mod_2 <- lm(mpg ~ am + drat + am:wt, data = df_test)
+mod_2 %>% tidy()
+```
+
+_Note:_
+
+ _- all terms are insignificant at the **0.05** level_
+ 
+
+```{r model_3}
+mod_3 <- lm(mpg ~ am + am:wt, data = df_train)
+mod_3 %>% tidy()
+```
+
+_Note:_
+ 
+ _- controlling for all the the variables in the model, when the transmission is **Manual** a 1 unit increase in weight leads to a decrease in mpg at a higher rate compared to Automatic._
+
+ _- It looks like this is a good model at the **0.05 and 0.01 significance level**, but I'll stick to the 0.05 level_
+ 
+```{r}
+mod_3 %>% glance() %>% select(r.squared, rmse = sigma)
+```
+ 
+
+_Note:_ 
+
+ _- At the **0.05 significance level** this model explains **`r glance(mod_3) %>% select(r.squared) %>% round(2)`** of the variance._
+
+ _- Training RMSE: **`r glance(mod_3) %>% select(rmse = sigma) %>% round(2)`**_
+
+### Diagnostics
+
+```{r normality, fig.align='center', fig.cap="Figure: 7.1"}
+mod_3 %>% augment() %>% cbind(name = df_train$name) %>% 
+  ggplot(aes(.fitted, .resid, color = am)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_text(aes(label = name)) +
+  scale_color_manual(values = c("tomato", "seagreen")) +
+  labs(
+    title = "Apart from a potential outlier, Variance seems to be Homoscedastic",
+    x = "Fitted Values",
+    y = "Residuals",
+    color = "Transmission"
+  ) + 
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r Nomality Standardized, fig.align='center', fig.cap="Figure: 7.2"}
+mod_3 %>% augment() %>% cbind(name = df_train$name) %>% 
+  ggplot(aes(.fitted, .std.resid, color = am)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_text(aes(label = name)) +
+  scale_color_manual(values = c("tomato", "seagreen")) +
+  xlim(c(10,32)) +
+  labs(
+    title = "No Outliers - Merc 240D is still with 3 standard deviations",
+    x = "Fitted Values",
+    y = "Standardized Residuals",
+    color = "Transmission"
+  ) + 
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+```{r linearity, fig.align='center', fig.cap="Figure 7.3"}
+mod_3 %>% augment() %>% cbind(name = df_train$name) %>% 
+  ggplot(aes(.fitted, mpg, color = am)) +
+  geom_point() +
+  geom_text(aes(label = name)) +
+  geom_abline(intercept = 0, slope = 1, color = "black") +
+  scale_color_manual(values = c("tomato", "seagreen")) +
+  xlab(c(5,40)) +
+  labs(
+    title = "Normality Check",
+    x = "Fitted Values",
+    y = "Actual Values",
+    color = "Transmission"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+## Predictions
+
+```{r predictions}
+mod_3_pred <- mod_3 %>% predict(df_test) %>% round(2)
+df_test %>% 
+  select(name, am, wt, mpg) %>% 
+  cbind(mpg_pred = mod_3_pred) %>% 
+  knitr::kable()
+
+Metrics::rmse(actual = df_test$mpg,
+              predicted = mod_3_pred) %>% 
+  round(2)
+```
+
+_Note:_
+
+ _- Test RMSE: **`r Metrics::rmse(actual = df_test$mpg,predicted = mod_3_pred) %>% round(2)`**_
+
+# Results
+
+## 1. Is an automatic or manual transmission better for **mpg**.
+
+ Based on the sample taken from the **1974 Motor Trends Analysis**. 
+ 
+  - If your vehicle weighs below 2,500lb (2.5 * 1000). I would say go for the manual transmission because it has a better mpg. 
+  
+  - If the weight of a vehicle is above 2.500lbs there not much of a difference between manual and automatic
+
+## 2. Quantify the **mpg** difference between automatic and manual transmissions.
+
+```{r}
+mod_3
+```
+
+ - Rsquared: `r glance(mod_3) %>% select(r.squared) %>% round(2)` | Rmse: `r Metrics::rmse(actual = df_test$mpg,predicted = mod_3_pred) %>% round(2)`
+ 
+ - According to the model Automatic Transmission vehicles have an avg mpg of `r mod_3$coefficients[1] %>% round(2)`. As weight increases by 1 unit _(1000/lbs)_, for an Automatic vehicle the mpg will drop by `r mod_3$coefficients[3] %>% round(2)`
+ 
+ - If the vehicle has a Manual Transmission the mpg increases by `r mod_3$coefficients[2] %>% round(2)`. As weight increases by 1 unit _(1000/lbs)_, for a Manual vehicle the mpg will drop by `r mod_3$coefficients[4] %>% round(2)`
+ 
+
+_Note: The sample size of the `mtcars` dataset was very small so I would be cautious to generalize these findings to the entire population_ 
+
+
+
+
+
+
+
+
+
+
+
