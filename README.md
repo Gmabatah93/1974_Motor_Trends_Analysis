@@ -35,9 +35,9 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 <img src="Pictures/pca_mpg.PNG" width="600">
 
 <p float="left">
-  <img src="Pictures/pca_PCs.PNG" width="400" />
-  <img src="Pictures/pca_PC1.PNG" width="400" />
-  <img src="Pictures/pca_PC2.PNG" width="400" />
+  <img src="Pictures/pca_PCs.PNG" width="300" />
+  <img src="Pictures/pca_PC1.PNG" width="300" />
+  <img src="Pictures/pca_PC2.PNG" width="300" />
 </p>
 
 
