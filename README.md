@@ -12,6 +12,8 @@ plotly     | version
 broom      | version
 
 ## Business Requirement
+1. Is an automatic or manual transmission better for mpg?
+2. Quantify the mpg difference between automatic and manual transmissions.
 
 ## Data Collection
 Feature | Description
