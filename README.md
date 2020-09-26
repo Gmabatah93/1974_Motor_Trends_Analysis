@@ -12,7 +12,7 @@ Packages
 ## Data Cleaning
 
 ## EDA
-![alt text](https://github.com/GMabatah93/Pictures/pca_mpg.png "Mpg (PCA)")
+<img src="Pictures/pca_mpg.PNG" width="500">
 ## Model Build
 
 ## Results
