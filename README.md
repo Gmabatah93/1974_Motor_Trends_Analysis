@@ -32,17 +32,17 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 ## Data Cleaning
 
 ## EDA
-<img src="Pictures/pca_mpg.PNG" width="500">
+<img src="Pictures/pca_mpg.PNG" width="800">
 
-<img src="Pictures/pca_PCs.PNG" width="500">
+<img src="Pictures/pca_PCs.PNG" width="800">
 
-<img src="Pictures/pca_PC1.PNG" width="500">
+<img src="Pictures/pca_PC1.PNG" width="800">
 
-<img src="Pictures/pca_PC2.PNG" width="500">
+<img src="Pictures/pca_PC2.PNG" width="800">
 
-<img src="Pictures/pca_Cylinder.PNG" width="500">
+<img src="Pictures/pca_Cylinder.PNG" width="800">
 
-<img src="Pictures/pca_Transmission.PNG" width="500">
+<img src="Pictures/pca_Transmission.PNG" width="800">
 
 ## Model Build
 To Quantify the difference I choose to use a Regresion Model because.
