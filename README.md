@@ -32,11 +32,11 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 ## Data Cleaning
 
 ## EDA
-<img src="Pictures/pca_mpg.PNG" width="800">
-
-<img src="Pictures/pca_PCs.PNG" width="800">
-
-<img src="Pictures/pca_PC1.PNG" width="800">
+<p float="left">
+  <img src="Pictures/pca_mpg.PNG" width="500" />
+  <img src="Pictures/pca_PCs.PNG" width="500" />
+  <img src="Pictures/pca_PC1.PNG" width="500" />
+</p>
 
 <img src="Pictures/pca_PC2.PNG" width="800">
 
