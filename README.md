@@ -45,6 +45,18 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 <img src="Pictures/pca_Transmission.PNG" width="500">
 
 ## Model Build
+To Quantify the difference I choose to use a Regresion Model because.
+
+* I was able to get good most of the variance explanined 
+
+* The error was low
+
+* Highly Interpretable, which leads to producing Coeffiecents for Inferential Statistics
+
+#### Final: Multiple Linear Regression Model
+Intercept | am (Manual) | am (Automatic) | am:wt | Rsquared | RMSE
+--- | --- |--- | --- | --- | ---
+29.314 | 13.352 | -3.282 | -8.051 | 83% | 3.45
 
 ## Results
 #### Is an *automatic* or *manual* transmission better for mpg?
@@ -55,11 +67,6 @@ carb    | Number of Carburetors - Engines with higher displacement typically hav
 
 
 #### Quantify the **mpg** difference between automatic and manual transmissions.
-
-Intercept | am (Manual) | am (Automatic) | am:wt | Rsquared | RMSE
---- | --- |--- | --- | --- | ---
-29.314 | 13.352 | -3.282 | -8.051 | 83% | 3.45
-
 
  * According to the model Automatic Transmission vehicles have an avg mpg of 29.31. As weight increases by 1 unit (1000/lbs), for an Automatic vehicle the mpg will drop by -3.28
 
